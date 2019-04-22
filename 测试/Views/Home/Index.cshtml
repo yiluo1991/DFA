@@ -1,0 +1,140 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+    <div id="app">
+
+
+        <Layout style="height:100%;position:fixed;top:0;right:0;bottom:0;left:0;">
+            <i-header> <h1 style="color:#fff;">双因素分析算法模拟</h1></i-header>
+            <Layout>
+
+                <i-content>
+                    <div style="padding:5px;background:#f1f1f1;">
+                        <i-button>增加一行</i-button>
+                        <i-button>增加一列</i-button>
+
+                    </div>
+
+                    <i-table  border scrollable   :columns="columnConfig" :data="rows" style="width:100%;" max-height="380" stripe>
+
+                    </i-table>
+                    <div style="text-align:center;padding:10px">
+                        <i-button v-on:click="calc">计算</i-button>
+                    </div>
+             
+                </i-content>
+            </Layout>
+        </Layout>
+
+
+        <Modal v-model="showDialog" width="360">
+            <p slot="header" >
+                <Icon type="ios-information-circle"></Icon>
+                <span>计算结果</span>
+            </p>
+            <div style="text-align:center">
+              
+            </div>
+            <div slot="footer">
+                <i-button size="large" @@click="showDialog=false">关闭</i-button>
+            </div>
+        </Modal>
+    </div>
+
+<script>
+    math.config({
+        number: 'BigNumber',  // Choose 'number' (default), 'BigNumber', or 'Fraction'
+        precision: 64        // 64 by default, only applicable for BigNumbers
+    })
+  
+    var app = new Vue({
+        el: '#app',
+        data: {
+            showDialog:false,
+            columnConfig: [],
+            colCount: 3,
+            rowCount: 5,
+            tData: [
+                [53, 61, 51],
+                [47, 55, 51],
+                [46, 52, 49],
+                [50, 58, 54],
+                [49, 54, 50]
+            ],
+            sums: {
+                all: 0,
+                rowSum: [],
+                colSum: []
+            },
+            avgs: {
+                allAvg: 0,
+                rowAvg: [],
+                colAvg: []
+            }
+        },
+        computed: {
+            rows: function () {
+                var rows = [];
+                this.tData.forEach(rowArr => {
+                    var rowObj = {};
+                    for (var i in rowArr) {
+                        rowObj[i] = rowArr[i];
+                    }
+                    rows.push(rowObj);
+                })
+         
+                return rows;
+            }
+        },
+        methods: {
+            calc: function () {
+                
+                var avgs = {
+                    //总均值
+                    allAvg: 0,
+                    rowAvg: [],
+                    colAvg: []
+                };
+                var sums = {
+                    all: 0,
+                    rowSum: [],
+                    colSum: []
+                }
+                this.tData.forEach((tr) => {
+                    tr.forEach(td => {
+                        sums.all += math.eval(sums.all + "+" + td);
+                    })
+                })
+                this.sums.all = sums.all
+            },
+            resetColumnConfig: function () {
+                this.columnConfig = [{
+                    title: ' ',
+                    key: 0,
+                    minWidth: 100,
+                    fixed:'left',
+                    render: function (h, d) {
+                    
+                             return h('b', "A" + (d.row._index + 1))
+                        
+                       
+                    }
+                }]
+                 for (var i = 0; i < this.colCount; i++) {
+                    this.columnConfig.push({
+                        title: "B" + (i + 1),
+                        key: i, 
+                   
+                        minWidth: 100
+                    })
+                }
+            },
+            addColumnConfig: function () {
+               
+            }
+        }
+    });
+
+    app.resetColumnConfig();
+
+</script>
