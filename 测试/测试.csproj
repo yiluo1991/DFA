@@ -226,6 +226,8 @@
     <Content Include="Scripts\IView\styles\fonts\ionicons.ttf" />
     <Content Include="Scripts\IView\styles\fonts\ionicons.woff" />
     <Content Include="双因素.rar" />
+    <Content Include="Views\Home\Index - 复制.cshtml" />
+    <Content Include="Views\Home\Index-半成品.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />

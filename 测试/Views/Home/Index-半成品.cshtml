@@ -1,0 +1,347 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+<div id="app">
+
+
+    <Layout style="height:100%;position:fixed;top:0;right:0;bottom:0;left:0;">
+        <i-header> <h1 style="color:#fff;">双因素分析算法模拟</h1></i-header>
+        <Layout>
+
+            <i-content>
+                <div style="padding:5px;background:#f1f1f1;">
+                    <i-button>增加一行</i-button>
+                    <i-button>增加一列</i-button>
+                </div>
+                <i-table border scrollable :columns="columnConfig" :data="rows" style="width:100%;" max-height="380" stripe>
+
+                </i-table>
+                <div style="text-align:center;padding:10px">
+                    <i-button v-on:click="calc">计算</i-button>
+                </div>
+                <i-table border scrollable :columns="resultColumnConfig" :data="resultData" style="width:100%;" max-height="380" stripe>
+            </i-content>
+        </Layout>
+    </Layout>
+
+
+    <Modal v-model="showDialog" width="360">
+        <p slot="header">
+            <Icon type="ios-information-circle"></Icon>
+            <span>计算结果</span>
+        </p>
+        <div style="text-align:center">
+
+        </div>
+        <div slot="footer">
+            <i-button size="large" @@click="showDialog=false">关闭</i-button>
+        </div>
+    </Modal>
+</div>
+
+<script>
+
+    math.config({
+        number: 'BigNumber',  // Choose 'number' (default), 'BigNumber', or 'Fraction'
+        precision: 64        // 64 by default, only applicable for BigNumbers
+    })
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            resultColumnConfig: [
+                {
+                    title: "来源",
+                    key: 'name',
+                    minWidth: 100
+                }, {
+                    title: 'SS',
+                    key: 'ss',
+                    minWidth: 100
+                }, {
+                    title: 'df',
+                    key: 'df',
+                    minWidth: 100
+                }, {
+                    title: 'MS',
+                    key: 'ms',
+                    minWidth: 100
+
+                }, {
+                    title: "F",
+                    key: 'f',
+                    minWidth: 100
+                }
+            ],
+            showDialog: false,
+            columnConfig: [],
+            colCount: 3,
+            rowCount: 2,
+            resultData: [],
+            tData: [
+                [[3, 1, 1, 6, 4], [2, 5, 9, 7, 7], [9, 9, 13, 6, 8]],
+                [[0, 2, 0, 0, 3], [3, 8, 3, 3, 3], [0, 0, 0, 5, 0]]
+            ],
+            sums: {
+                all: 0,
+                rowSum: [],
+                colSum: []
+            },
+            avgs: {
+                allAvg: 0,
+                rowAvg: [],
+                colAvg: []
+            }
+        },
+        computed: {
+            rows: function () {
+                var rows = [];
+                this.tData.forEach(rowArr => {
+                    var rowObj = {};
+                    for (var i in rowArr) {
+                        rowObj[i] = rowArr[i];
+                    }
+                    rows.push(rowObj);
+                })
+
+                return rows;
+            }
+        },
+        methods: {
+            calc: function () {
+                var avgs = {
+                    //总均值
+                    allAvg: 0,
+                    rowAvg: [],
+                    colAvg: []
+                };
+                var sums = {
+                    all: 0,
+                    bSum: [],
+                    aSum: []
+                }
+                var sss = {
+                    all: 0,
+                    b: 0,
+                    a: 0
+                }
+
+                tData = [];
+                var calcData = [];//单元格数据
+                var EXup2 = 0; //所有数据方差和
+                var G = 0;  //所有数据总和
+                var N = 0;  //所有数据个数
+                this.tData.forEach((tr) => {
+                    var row = [];
+                    var calcrow = [];
+                    tr.forEach((td) => {
+                        var x = 0;
+                        var ss = 0;
+                        var calctd = { n:td.length };
+                        if (td.length > 0) {
+                            td.forEach(num => {
+                                x = math.eval(`${x}+${num}`);
+                                N++;
+                                EXup2 = math.eval(`${EXup2}+(${num}^2)`);
+                                G = math.eval(`${G}+${num}`);
+                            })
+                            calctd.T = x;
+                            x = math.eval(`${x}/${td.length}`)
+                        }
+                        row.push(x);
+                        calctd.df= td.length - 1;
+                        td.forEach(num => {
+                            ss = math.eval(`${ss}+(${num}-${x})^2`)
+                        });
+                        calctd.SS = ss;
+                        calcrow.push(calctd);
+                    })
+                    tData.push(row);
+                    calcData.push(calcrow);
+                })
+         
+                //alert(G);                  120
+                //alert(EXup2);           840
+
+                /************
+                 * 总变异
+                 * step1
+                 ************ */
+                var SS总 = math.eval(`${EXup2}-${G}^2/${N}`);
+                //console.log(SS总);  //360
+
+             
+                 /**
+                 * step2
+                 * */
+                df总 = N - 1;   //29
+
+                /*************
+                 * 处理间变异 
+                 * step1
+                 ************ */
+                var SS处理间 = 0; 
+                for (var i = 0; i < this.rowCount; i++) {
+                    for (var z = 0; z < this.colCount; z++) {
+                        SS处理间 = math.eval(`${SS处理间}+${calcData[i][z].T}^2/${this.tData[i][z].length}`)
+                    }
+                }
+                SS处理间 = math.eval(`${SS处理间}-${G}^2/${N}`);
+               // alert( SS处理间)  //240
+
+                /**
+                 * step2
+                 * */
+                var df处理间 = this.colCount * this.rowCount - 1;
+
+
+                /*************
+                 * 处理内变异
+                 ********** **/
+                var SS处理内 = 0;
+                calcData.forEach(row => {
+                    row.forEach(td => {
+                        SS处理内 = math.eval(`${SS处理内}+${td.SS}`);
+                    })
+                })
+
+                var df处理内 = 0;
+                   calcData.forEach(row => {
+                       row.forEach(td => {
+                        console.log(td)
+                        df处理内 = math.eval(`${df处理内}+${td.df}`);
+                    })
+                })
+                //console.log(SS处理内);    120
+               // console.log(df处理内;   24
+
+
+                /**********************************************************************************
+                 * 
+                 * 双因素分析第二阶段
+                 * 
+                 *************************************************************************************/
+
+                /**
+                 * step1
+                 **/
+                var SSa = 0;
+                for (var i = 0; i < this.rowCount; i++) {
+                    var n = 0;
+                    var t = 0;
+                    for (var z = 0; z < this.colCount; z++) {
+                        n += this.tData[i][z].length;
+                        t = math.eval(`${t}+${calcData[i][z].T}`);
+                    }
+                    SSa = math.eval(`${SSa}+(${t})^2/${n}`);
+                   
+                }
+                SSa = math.eval(`${SSa}-${G}^2/${N}`);
+
+                dfa = this.rowCount - 1;
+                 // console.log(SSa);//120
+
+                /***
+                 * step2
+                 * **/
+                var SSb= 0;
+
+                for (var i = 0; i < this.colCount; i++) {
+                    var t = 0;
+                    var n = 0;
+                    for (var z = 0; z < this.rowCount; z++) {
+                        t = math.eval(`${t}+${calcData[z][i].T}`);
+                        n += calcData[z][i].n;
+                    }
+                    SSb = math.eval(`${SSb}+${t}^2/${n}`);
+                }
+                SSb = math.eval(`${SSb}-${G}^2/${N}`);
+                dfb = this.colCount - 1;
+                //console.log(SSb) ;  60
+
+
+
+                /***
+                 * step3:   AB交互作用
+                 * **/
+                SSab = math.eval(` ${SS处理间} - ${SSa} - ${SSb}`);
+                dfab = math.eval(`${ df处理间 } - ${ dfa } - ${ dfb }`);
+                //console.log(SSab);
+                //console.log(dfab)
+
+
+                /*******************************************************************************************
+                 * 
+                 * 双因素分析的F均方与F分数
+                 * 
+                 * ****************************************************************************************/
+                var MS处理内 = math.eval(`${SS处理内}/${df处理内}`);
+                var MSa = math.eval(`${SSa}/${dfa}`);
+                var MSb = math.eval(`${SSb}/${dfb}`);
+                var MSab = math.eval(`${SSab}/${dfab}`);
+                var Fa = math.eval(`${MSa}/${MS处理内}`);
+                var Fb = math.eval(`${MSb}/${MS处理内}`);
+                var Fab = math.eval(`${MSab}/${MS处理内}`);
+                var resultData = [
+                    {
+                        name: "组间",
+                        ss: math.number(SS处理间),
+                        df: math.number(df处理间)
+                },{
+                    name: "　A因素",
+                    ss: math.number(SSa),
+                    df: math.number(dfa),
+                        ms: math.number(MSa),
+                        f: `F(${dfa},${df处理内})=` + math.number(Fa)
+                }, {
+                    name: "　B因素",
+                    ss: math.number(SSb),
+                    df: math.number(dfb),
+                    ms: math.number(MSb),
+                    f: `F(${dfb},${df处理内})=` +math.number(Fb)
+                }, {
+                    name: "AxB交互作用",
+                    ss: math.number(SSab),
+                    df: math.number(dfab),
+                    ms: math.number(MSab),
+                    f:`F(${dfab},${df处理内})=` + math.number(Fab)
+                }, {
+                        name: "组内",
+                        ss: math.number(SS处理内),
+                        df: math.number(df处理内),
+                        ms: math.number(MS处理内),
+                }, {
+                        name: "合计",
+                        ss: math.number(SS总),
+                        df: math.number(df总)
+                }];
+
+this.resultData = resultData;
+            },
+            resetColumnConfig: function () {
+                this.columnConfig = [{
+                    title: ' ',
+                    key: 0,
+                    minWidth: 100,
+                    fixed: 'left',
+                    render: function (h, d) {
+                        return h('b', "A" + (d.row._index + 1))
+                    }
+                }]
+                for (var i = 0; i < this.colCount; i++) {
+                    this.columnConfig.push({
+                        title: "B" + (i + 1),
+                        key: i,
+                        minWidth: 100
+                    })
+                }
+            },
+            addColumnConfig: function () {
+
+            }
+        }
+    });
+
+    app.resetColumnConfig();
+
+</script>
