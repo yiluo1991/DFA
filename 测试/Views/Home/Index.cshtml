@@ -1,167 +1,84 @@
 ﻿@{
     ViewBag.Title = "双因素算法实现";
 }
-<style>
-    .table-center td, .table-center th {
-        text-align: center !important;
-        padding: 5px;
-        border: 1px solid #ddd;
-        position: relative;
-        border-collapse: collapse !important;
-    }
+@section head{
+    <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+    <link href="~/Content/index.css" rel="stylesheet" />
+}
 
-        .table-center td:hover {
-            background: #ebf7ff;
-        }
 
-    .table-center table {
-        border-spacing: 0;
-        border-collapse: collapse !important;
-    }
-
-    .item {
-        background: #aaa;
-        color: #fff;
-        border: 1px solid #888;
-        border-radius: 5px;
-        margin: 2px 5px;
-        min-width: 30px;
-        display: inline-block;
-        padding: 3px;
-    }   
-    
-    .infoitem {
-        background: #fff;
-        color: #666;
-        border: 1px solid #777;
-        border-radius: 5px;
-        margin: 2px 5px;
-        min-width: 30px;
-        display: inline-block;
-        padding: 3px;
-    }
-    .table-center td:hover .edit {
-        display: block;
-    }
-
-    .edit {
-        display: none;
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        background: #fff;
-        padding: 0px 5px;
-        border: 1px solid #eee;
-        border-bottom: 0;
-        color: #559ac7;
-        border-right: 0;
-        border-top-left-radius: 5px;
-    }
-
-        .edit:hover {
-            background: #7486ac;
-            color: #fff;
-        }
-           .container {
-       
-             margin:0 auto;
-            }
-
-           .scroll{
-           position:absolute;
-            bottom:0;
-            right:0;
-            left:0;
-            
-             overflow:auto;
-            top:46px;
-           }
-       @@media screen and (min-width:970px) {
-            .container {
-               width:960px;
-            }
-        }
-        @@media screen and (min-width:1200px) {
-            .container {
-               width:1100px;
-            }
-        }
-          @@media screen and (min-width:1600px) {
-            .container {
-               width:1550px;
-            }
-        }
-           @@media screen and (min-width:1800px) {
-            .container {
-               width:1770px;
-            }
-        }
-           hr{
-               border:1px solid #eee;
-               border-top:none;
-               display:block;
-           }
-</style>
 <div id="app">
 
 
     <Layout style="height:100%;position:fixed;top:0;right:0;bottom:0;left:0;">
-        <i-header> <h1 style="color:#fff;">双因素分析算法实现</h1></i-header>
+        <i-header> <h1 style="color:#fff;">可重复双因素分析算法实现</h1></i-header>
         <Layout style="background:#fff;">
             <i-content style="position:relative;">
                 <div style="padding:5px;background:#f1f1f1;border-bottom:1px solid #ddd;height:46px;">
-                    <i-button icon="md-download" size="large" v-on:click="loadData1">加载测试数据1</i-button>
-                    <i-button icon="md-download" size="large" v-on:click="loadData2">加载测试数据2</i-button>
-                    <i-button icon="md-help-circle" size="large">帮助</i-button>
+                    <i-button icon="md-download" size="large" v-on:click="loadData1">加载工资测试数据</i-button>
+                    <i-button icon="md-download" size="large" v-on:click="loadData2">加载《行为科学统计》书442页数据</i-button>
+                    <i-button icon="md-download" size="large" v-on:click="loadData3">加载49000条数据</i-button>
+                    <i-button icon="md-help-circle" size="large" v-on:click="showReadMe=true">说明文档</i-button>
                 </div>
                 <div class="scroll">
                     <div class="container">
-                        <p v-if="!header.rows" style="padding:30px;text-align:center;">
+                        <p v-if="!header.rows||calcData.length==0" style="padding:30px;text-align:center;">
                             数据未加载，请加载数据
                         </p>
-                        <div v-if="header.rows!=undefined" class="ivu-table-wrapper  table-center" style="width: 100%;margin-top:10px;">
-                            <table class="ivu-table" style="table-layout:fixed">
-                                <colgroup>
-                                    <col width="50" />
-                                    <col width="50" />
-                                    <col width="100" v-for="item in header.rows.children" />
-                                </colgroup>
-                                <tbody>
-                                    <tr> <th colspan="2" rowspan="2"> </th> <th style="text-align:center" :colspan="header.rows.children.length">B因素：{{header.rows.name}}</th></tr>
-                                    <tr>  <th style="text-align:center" v-for="item in header.rows.children">{{item}}</th></tr>
-                                    <tr v-for="(item,rowindex) in tData">
+                        <div v-if="header.rows!=undefined&&calcData.length!=0" scrollable class="ivu-table-wrapper  table-center" style="width: 100%;margin-top:10px;border:none;outline:none;padding-right:16px;position:relative;">
+                            <div class="addcol" v-on:click="addcol">
+                                +
+                            </div>
+                            <div class="ivu-table ivu-table-default ivu-table-border " style="overflow:auto;border:none!important;outline:1px solid #ddd;">
+                                <table class="ivu-table" style="table-layout:fixed;">
+                                    <colgroup>
+                                        <col width="50" />
+                                        <col width="50" />
+                                        <col width="100" v-for="item in header.rows.children" />
+                                    </colgroup>
+                                    <tbody>
+                                        <tr> <th colspan="2" rowspan="2"> </th> <th style="text-align:center" :colspan="header.rows.children.length">B因素：{{header.rows.name}}</th></tr>
+                                        <tr>  <th style="text-align:center" v-for="item in header.rows.children">{{item}}</th></tr>
+                                        <tr v-for="(item,rowindex) in tData">
 
-                                        <th style="text-align:center;" v-if="rowindex==0" :rowspan="header.cols.children.length">
-                                            <span style="word-break:break-all;white-space:normal;">
-                                                因素A：{{header.cols.name}}
-                                            </span>
+                                            <th style="text-align:center;" v-if="rowindex==0" :rowspan="header.cols.children.length">
+                                                <span style="word-break:break-all;white-space:normal;">
+                                                    因素A：{{header.cols.name}}
+                                                </span>
 
-                                        </th>
-                                        <th style="text-align:center">{{header.cols.children[rowindex]}}</th>
-                                        <td v-for="(td,colindex) in item">
-                                            <div v-if="td.length<100">
-                                                <span class="item" v-for="v in td">{{v}}</span>
-                                                <hr style="margin:10px 0;" />
-                                            </div>
-                                            <div v-if="td.length>=100">
-                                                @*<span style="color:#777;">数据过多，不做显示</span>*@
-                                            </div>
+                                            </th>
+                                            <th style="text-align:center">{{header.cols.children[rowindex]}}</th>
+                                            <td v-for="(td,colindex) in item">
+                                                <div v-if="td.length<100&&td.length!=0">
+                                                    <span class="item" v-for="v in td">{{v}}</span>
+                                                    <hr style="margin:10px 0;" />
+                                                </div>
+                                                <div v-if="td.length==0">
+                                                    <span class="infoitem">无数据，请添加</span>
+                                                    <hr style="margin:10px 0;" />
+                                                </div>
+                                                <div v-if="td.length>=100">
+                                                    <span style="color:#777;">数据过多，不做显示</span>
+                                                    <hr style="margin:10px 0;" />
+                                                </div>
 
-                                            <div>
-                                                <span class="infoitem " v-for="(v,k) in calcData[rowindex][colindex]">{{k}}:{{v}}</span>
+                                                <div>
+                                                    <span class="infoitem " v-for="(v,k) in calcData[rowindex][colindex]">{{k}}:{{v | number}}</span>
 
-                                            </div>
-                                            <a class="edit" href="#" v-on:click="enterEditSource(rowindex,colindex)"><Icon type="ios-create-outline" size="16" style="vertical-align:middle"></Icon> <span style="vertical-align:middle">修改</span> </a>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                                </div>
+                                                <a class="edit" href="#" v-if="td.length<100" v-on:click="enterEditSource(rowindex,colindex)"><Icon type="ios-create-outline" size="16" style="vertical-align:middle"></Icon> <span style="vertical-align:middle">修改</span> </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="addrow" v-on:click="addrow">
+                                +
+                            </div>
                         </div>
                         <div style="text-align:center;padding:10px">
                             <i-button v-on:click="calc" type="primary" :disabled="header.rows==undefined" icon="md-calculator">计算</i-button>
                         </div>
-
-                        <i-table v-if="resultData.length>0" border scrollable :columns="resultColumnConfig" :data="resultData" style="width:100%;" max-height="380" stripe></i-table>
                         <br />
                     </div>
                 </div>
@@ -177,16 +94,16 @@
         </p>
         <div>
             <div style="padding:5px;background:#f1f1f1;text-align:left;">
-                <i-button icon="md-add-circle" v-on:click="loadData1">添加</i-button>
+                <i-button icon="md-add-circle" v-on:click="enterAddValue">添加</i-button>
             </div>
             <i-table border height="380" :columns="editColumnConfig" :data="editData"></i-table>
         </div>
         <div slot="footer">
-            <i-button size="large" @@click="showDialog=false" type="primary">确定</i-button>
+            <i-button size="large" @@click="saveEditData" type="primary">确定</i-button>
             <i-button size="large" @@click="showDialog=false">关闭</i-button>
         </div>
     </Modal>
-    <Modal v-model="showEditValueDialog" width="500" scrollable>
+    <Modal v-model="showEditValueDialog " :styles="{top:'160px'}" width="500" scrollable>
         <p slot="header">
             <Icon type="ios-create-outline"></Icon>
             <span>设置值</span>
@@ -194,9 +111,9 @@
         <div>
             <i-form :model="editValue" label-position="left" :rules="ruleValidate" :label-width="100" ref="editValue">
                 <Form-Item label="数值" prop="value">
-                    <i-input type="text" v-model="editValue.value" style="width:100%" />
+                    <i-input element-id="input" autofocus type="text" v-model="editValue.value" :maxlength="12" style="width:100%" />
                 </Form-Item>
-           
+
             </i-form>
         </div>
         <div slot="footer">
@@ -204,412 +121,47 @@
             <i-button size="large" @@click="showEditValueDialog=false">关闭</i-button>
         </div>
     </Modal>
+    <Modal v-model="loading " :closable="false" footer-hide :mask-closable="false" :styles="{top:'160px'}" width="300" scrollable>
+        <div style="text-align:center;">
+            <Icon type="ios-loading" id="loading" size="30"></Icon>
+            <span>请稍后，更新数据中...</span>
+        </div>
+
+
+    </Modal>
+    <Modal v-model="showResult" :styles="{top:'160px'}" width="960" scrollable>
+        <p slot="header">
+
+            <span>计算结果</span>
+        </p>
+        <div>
+            <i-table v-if="resultData.length>0" border scrollable :columns="resultColumnConfig" :data="resultData" style="width:100%;" max-height="380" stripe></i-table>
+        </div>
+        <div slot="footer">
+            <i-button size="large" @@click="showResult=false">关闭</i-button>
+        </div>
+    </Modal>
+
+    <Modal v-model="showReadMe" :styles="{top:'160px'}" width="680" scrollable>
+        <p slot="header">
+            <span>Demo说明文档</span>
+        </p>
+        <div >
+            <h3>【说明】</h3>
+            <ol style="list-style-position:inside;">
+                <li>本案例计算过程依据《行为科学统计》442页</li>
+                <li>本Demo由于还未拿到数据库，所以数据接口部分调用的是服务器上预设的几份数据。</li>
+                <li>获取服务器数据之后，用户可对样本数据进行修改（为了优化体验，测试样本少于100条的单元格才开启修改功能）</li>
+                <li>对于测试样本数量过多的情况下，不显示具体数字，只显示该单元格的n，T，df 和 SS</li>
+
+
+            </ol>
+        </div>
+        <div slot="footer">
+            <i-button size="large" @@click="showReadMe=false">关闭</i-button>
+        </div>
+    </Modal>
 </div>
 
-<script>
+<script src="~/Scripts/index.js"></script>
 
-    math.config({
-        number: 'BigNumber',  // Choose 'number' (default), 'BigNumber', or 'Fraction'
-        precision: 64        // 64 by default, only applicable for BigNumbers
-    })
-
-    var app = new Vue({
-        el: '#app',
-        data: {
-            ruleValidate: {
-                value: [{
-                    required:true,message:"该数据必填"
-                },{
-                    type:'string',message:"请输入数字", pattern: /^[0-9]+(.[0-9]{1,64})?$/
-                }]
-            },
-            showEditValueDialog:false,
-            resultColumnConfig: [
-                {
-                    title: "来源",
-                    key: 'name',
-                    minWidth: 100
-                }, {
-                    title: 'SS',
-                    key: 'ss',
-                    minWidth: 100
-                }, {
-                    title: 'df',
-                    key: 'df',
-                    minWidth: 100
-                }, {
-                    title: 'MS',
-                    key: 'ms',
-                    minWidth: 100
-
-                }, {
-                    title: "F",
-                    key: 'f',
-                    minWidth: 100
-                }
-            ],
-            editData:[],
-            editColumnConfig: [ {
-                    title: "数据",
-                    key:"value",
-                    minWidth: 100
-            }, {
-                    title: '操作',
-                    key: 'value',
-                    width: 160,
-                    render: function (h, d) {
-                        return h('div', [
-                            h('Button', {
-                                props: {
-                                    size: 'small',
-                                    type: 'success',
-                                    icon:'md-create'
-                                },
-                                on: {
-                                    click: () => {
-                                        app.enterEditValue(d.index);
-                                    }
-                                }
-                            }, '修改'),
-                            h('span', ' '),
-                            h('Button', {
-                                props: {
-                                    size: 'small',
-                                    type: 'error',
-                                    icon: 'ios-trash-outline'
-
-                                },
-                                on: {
-                                    click: () => {
-                                        app.editData.splice(d.index,1)
-                                    }
-                                }
-                            }, '删除')
-                        ])
-                    }
-                }],
-            showDialog: false,
-            colCount: 0,
-            rowCount: 0,
-            resultData: [],
-            editValue: {},
-            header: {
-
-            },
-            tData: [
-
-            ],
-            calcData:[]
-        },
-     
-        methods: {
-            saveValue: function () {
-
-                this.$refs["editValue"].validate((valid) => {
-                    if (valid) {
-                            this.$Message.success('Success!');
-                    } else {
-                  this.$Message.error('Fail!');
-                    }
-                })
-            },
-            resetValue () {
-                this.$refs["editValue"].resetFields();
-            },
-            enterEditValue: function (index) {
-                this.resetValue();
-                this.editValue = {value: this.editData[index].value};
-                app.showEditValueDialog = true;
-            },
-            enterEditSource: function (rowindex,colindex) {
-                var d = this.tData[rowindex][colindex];
-                this.editData = [];
-                d.forEach(item => {
-                    this.editData.push({
-                        value: item
-                    })
-                });
-                this.showDialog = true;
-            },
-            //核心算法
-            calc: function () {
-                var calcData = [];//单元格数据
-                //var EXup2 = 0; //所有数据方差和，用于计算SS总，已有其他方式计算，作废
-                var G = 0;  //所有数据总和
-                var N = 0;  //所有数据个数
-                this.tData.forEach((tr) => {
-                    var calcrow = [];
-                    tr.forEach((td) => {
-                        var x = 0;
-                        var ss = 0;
-                        var calctd = { n: td.length };
-                        if (td.length > 0) {
-                            td.forEach(num => {
-                                x = math.eval(`${x}+${num}`);
-                                //  EXup2 = math.eval(`${EXup2}+(${num}^2)`);
-                            })
-                            calctd.T = x;
-                            x = math.eval(`${x}/${td.length}`)
-                        } else {
-                            calctd.T = x;
-                        }
-                        calctd.df = td.length - 1;
-                        td.forEach(num => {
-                            ss = math.eval(`${ss}+(${num}-${x})^2`)
-                        });
-                        calctd.SS = ss;
-                        calcrow.push(calctd);
-                    })
-                
-                    calcData.push(calcrow);
-                })
-
-
-
-
-                calcData.forEach(row => {
-                    row.forEach(td => {
-                        N += td.n;
-                        G = math.eval(`${G}+${td.T}`)
-
-                    })
-                })
-
-                console.log(JSON.parse(JSON.stringify(calcData)))
-          
-
-                /************
-                 * 总变异
-                 * step1
-                 ************ */
-                //作废
-                // var SS总 = math.eval(`${EXup2}-${G}^2/${N}`);
-        
-
-
-                /**
-                * step2
-                * */
-                df总 = N - 1;   
-
-                /*************
-                 * 处理间变异
-                 * step1
-                 ************ */
-                var SS处理间 = 0;
-                for (var i = 0; i < this.rowCount; i++) {
-                    for (var z = 0; z < this.colCount; z++) {
-                        if (calcData[i][z].n > 0) {
-                            SS处理间 = math.eval(`${SS处理间}+${calcData[i][z].T}^2/${calcData[i][z].n}`)
-                        }
-                    }
-                }
-                SS处理间 = math.eval(`${SS处理间}-${G}^2/${N}`);
-         
-
-                /**
-                 * step2
-                 * */
-                var df处理间 = this.colCount * this.rowCount - 1;
-
-
-                /*************
-                 * 处理内变异
-                 ********** **/
-                var SS处理内 = 0;
-                calcData.forEach(row => {
-                    row.forEach(td => {
-                        SS处理内 = math.eval(`${SS处理内}+${td.SS}`);
-                    })
-                })
-
-                var df处理内 = 0;
-                calcData.forEach(row => {
-                    row.forEach(td => {
-                        console.log(td)
-                        df处理内 = math.eval(`${df处理内}+${td.df}`);
-                    })
-                })
-       
-                /**********************************************************************************
-                 *
-                 * 双因素分析第二阶段
-                 *
-                 *************************************************************************************/
-
-                /**
-                 * step1
-                 **/
-                var SSa = 0;
-                for (var i = 0; i < this.rowCount; i++) {
-                    var n = 0;
-                    var t = 0;
-                    for (var z = 0; z < this.colCount; z++) {
-                        n += calcData[i][z].n;
-                        t = math.eval(`${t}+${calcData[i][z].T}`);
-                    }
-                    SSa = math.eval(`${SSa}+(${t})^2/${n}`);
-
-                }
-                SSa = math.eval(`${SSa}-${G}^2/${N}`);
-
-                dfa = this.rowCount - 1;
-
-                /***
-                 * step2
-                 * **/
-                var SSb = 0;
-
-                for (var i = 0; i < this.colCount; i++) {
-                    var t = 0;
-                    var n = 0;
-                    for (var z = 0; z < this.rowCount; z++) {
-                        t = math.eval(`${t}+${calcData[z][i].T}`);
-                        n += calcData[z][i].n;
-                    }
-                    SSb = math.eval(`${SSb}+${t}^2/${n}`);
-                }
-                SSb = math.eval(`${SSb}-${G}^2/${N}`);
-                dfb = this.colCount - 1;
-
-
-
-                /***
-                 * step3:   AB交互作用
-                 * **/
-                SSab = math.eval(` ${SS处理间} - ${SSa} - ${SSb}`);
-                dfab = math.eval(`${df处理间} - ${dfa} - ${dfb}`);
-
-
-                /*******************************************************************************************
-                 *
-                 * 双因素分析的F均方与F分数
-                 *
-                 * ****************************************************************************************/
-                var MS处理内 = math.eval(`${SS处理内}/${df处理内}`);
-                var MSa = math.eval(`${SSa}/${dfa}`);
-                var MSb = math.eval(`${SSb}/${dfb}`);
-                var MSab = math.eval(`${SSab}/${dfab}`);
-                var Fa = math.eval(`${MSa}/${MS处理内}`);
-                var Fb = math.eval(`${MSb}/${MS处理内}`);
-                var Fab = math.eval(`${MSab}/${MS处理内}`);
-                var resultData = [
-                    {
-                        name: "组间",
-                        ss: math.number(SS处理间),
-                        df: math.number(df处理间)
-                    }, {
-                        name: "　　A因素："+this.header.cols.name,
-                        ss: math.number(SSa),
-                        df: math.number(dfa),
-                        ms: math.number(MSa),
-                        f: `F(${dfa},${df处理内})=` + math.number(Fa)
-                    }, {
-                        name: "　　B因素："+this.header.rows.name,
-                        ss: math.number(SSb),
-                        df: math.number(dfb),
-                        ms: math.number(MSb),
-                        f: `F(${dfb},${df处理内})=` + math.number(Fb)
-                    }, {
-                        name: "　　AxB交互作用",
-                        ss: math.number(SSab),
-                        df: math.number(dfab),
-                        ms: math.number(MSab),
-                        f: `F(${dfab},${df处理内})=` + math.number(Fab)
-                    }, {
-                        name: "组内",
-                        ss: math.number(SS处理内),
-                        df: math.number(df处理内),
-                        ms: math.number(MS处理内),
-                    }, {
-                        name: "合计",
-                        ss: math.number(math.eval(` ${SS处理内} + ${SS处理间}`)),
-                        df: math.number(df总)
-                    }];
-
-                this.resultData = resultData;
-            },
-            bindCalcData: function () {
-                var calcData = [];//单元格数据
-                this.tData.forEach((tr) => {
-                    var calcrow = [];
-                    tr.forEach((td) => {
-                        var x = 0;
-                        var ss = 0;
-                        var calctd = { n: td.length };
-                        if (td.length > 0) {
-                            td.forEach(num => {
-                                x = math.eval(`${x}+${num}`);
-                            })
-                            calctd.T = math.number( x).toFixed(2);;
-                            x = math.eval(`${x}/${td.length}`)
-                        } else {
-                            calctd.T = x;
-                        }
-                        calctd.df =  td.length - 1;
-                        td.forEach(num => {
-                            ss = math.eval(`${ss}+(${num}-${x})^2`);
-                        });
-                        calctd.SS = math.number(ss).toFixed(2);
-                        calcrow.push(calctd);
-                    })
-                    calcData.push(calcrow);
-                })
-                this.calcData=calcData
-                console.log(calcData)
-            },
-            loadData1: function () {
-                this.loadData("data1");
-            },
-            loadData2: function () {
-                   this.loadData("data2");
-            },
-            loadData: function (dataName) {
-                this.header = window[dataName].header;
-                this.tData = window[dataName].rows;
-                this.colCount = this.header.rows.children.length;
-                this.rowCount = this.header.cols.children.length;
-                this.bindCalcData();
-                this.resultData = [];
-            }
-        }
-    });
-
-    var data1 = {
-        rows: [
-            [[4500, 6000, 7000, 6000, 5500,5000], [4500, 4500, 4800,6500, 5500, 5500], [5000,7000,6000, 5500, 5500, 5500], [4500, 5500, 6500, 6600, 5000, 5500], [7000, 8000, 6000, 5000, 6000, 5500]],
-            [[7000, 6800, 9000, 8000, 8800, 8800], [8000, 8000, 7900, 6800, 6000, 8800], [7000, 9000, 8500, 8000, 7900, 8800], [7800, 8700, 8200, 8000, 9000, 8800], [10000, 12000, 9800, 10000, 8900, 8800]],
-            [[13000, 16000, 18000, 15000, 14000, 18800], [15000, 12000, 11000, 13000, 14000, 18800], [15000, 16000, 15000, 17000, 18000, 18800], [17000, 13000, 13000, 16000, 13000, 18800], [20000, 18000, 17000, 16000, 18800, 18800]],
-            [[22000, 23000, 25000, 25000,30000, 31000], [20000, 19000, 25000,21000, 23000, 19000], [25000, 21000, 25000,19000, 25000, 220000], [19900, 26000, 25000,27000, 21000, 20000], [28000,25000, 29000, 30000, 35000, 30000]]
-      
-        ],
-        header: {
-            rows: {
-                name: "专业方向", children: [
-                    "Web前端", ".NET", "Java","PHP","Python"
-                ]
-            },
-            cols: {
-                name: "工作年限", children: [
-                    "1-2年", "3-4年","5-6年","7年以上"
-                ]
-            }
-        }
-    }
-    var data2 = {
-        rows: [[[3, 1, 1, 6, 4], [2, 5, 9, 7, 7], [9, 9, 13, 6, 8]],
-        [[0, 2, 0, 0, 3], [3, 8, 3, 3, 3], [0, 0, 0, 5, 0]]],
-        header: {
-            rows: {
-                name: "唤起水平", children: [
-                    "低", "中", "高"
-                ]
-            },
-            cols: {
-                name: "任务难度", children: [
-                    "容易", "困难"
-                ]
-            }
-        }
-    }
-</script>

@@ -129,8 +129,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\index.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
+    <Content Include="Scripts\data3.js" />
+    <Content Include="Scripts\index.js" />
     <Content Include="Scripts\IView\iview.js" />
     <Content Include="Scripts\IView\iview.min.js" />
     <Content Include="Scripts\IView\locale\ar-EG.js" />
@@ -169,6 +172,7 @@
     <Content Include="Scripts\math.min.js" />
     <Content Include="Scripts\vue.js" />
     <Content Include="Scripts\vue.min.js" />
+    <Content Include="Scripts\worker.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -184,7 +188,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Content\" />
     <Folder Include="Models\" />
   </ItemGroup>
   <ItemGroup>
@@ -228,6 +231,7 @@
     <Content Include="双因素.rar" />
     <Content Include="Views\Home\Index - 复制.cshtml" />
     <Content Include="Views\Home\Index-半成品.cshtml" />
+    <Content Include="Scripts\data3.json" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
